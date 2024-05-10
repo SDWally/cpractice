@@ -31,6 +31,8 @@ public:
 
     void initVector();
 
+    bool checkRepeat(int id, int type);
+
     vector<Student> vStu;
     vector<Teacher> vTea;
 

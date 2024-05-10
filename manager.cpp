@@ -46,15 +46,20 @@ void Manager::addPerson()
 
     int select = 0;
     cin >> select;
+
+    string errorTip;
+
     if (select == 1)
     {
         fileName = STUDENT_FILE;
         tip = "please input the student id: ";
+        errorTip = "student id dupliacate, please re input: ";
     }
     else 
     {
         fileName = TEACHER_FILE;
         tip = "please input the teacher id: ";
+        errorTip = "teacher id dupliacate, please re input: ";
     }
 
     ofs.open(fileName, ios::out|ios::app);
@@ -62,7 +67,21 @@ void Manager::addPerson()
     string name;
     string pwd;
     cout << tip << endl;
-    cin >> id;
+
+    while (true)
+    {
+        cin >> id;
+        bool ret = this->checkRepeat(id, select);
+        if (ret)
+        {
+            cout << errorTip << endl;
+        }
+        else
+        {
+            break;
+        }
+
+    }
 
     cout << "please input the name: " << endl;
     cin >> name;
@@ -128,6 +147,31 @@ void Manager::initVector()
 
 };
 
+
+bool Manager::checkRepeat(int id, int type)
+{
+    if (type == 1)
+    {
+        for (vector<Student>::iterator it = vStu.begin(); it != vStu.end(); it ++ )
+        {
+            if (id == it->m_Id)
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        for (vector<Teacher>::iterator it = vTea.begin(); it != vTea.end(); it ++ )
+        {
+            if (id == it->m_EmpId)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+};
 
 
 void managerMenu(Identity * &manager)
