@@ -2,6 +2,7 @@
 #include <iostream>
 using namespace std;
 #include "identity.hxx"
+#include "globalFile.hxx"
 
 
 
@@ -24,3 +25,5 @@ public:
     void cleanFile();
 
 };
+
+void managerMenu(Identity * &manager);

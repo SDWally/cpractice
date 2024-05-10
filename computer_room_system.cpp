@@ -88,6 +88,7 @@ void LoginIn(string fileName, int type)
             system("pause");
             system("cls");
             person = new Manager(name, pwd);
+            managerMenu(person);
             return;
         }
       }
