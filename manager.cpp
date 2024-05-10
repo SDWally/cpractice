@@ -1,5 +1,7 @@
 #include "manager.hxx"
+#include "computerRoom.h"
 #include <istream>
+#include <algorithm>
 
 
 Manager::Manager()
@@ -13,6 +15,18 @@ Manager::Manager(string name, string pwd)
     this->m_Pwd = pwd;
 
     this->initVector();
+
+    ifstream ifs;
+    ifs.open(COMPUTER_FILE, ios::in);
+
+    computerRoom c;
+    while (ifs >> c.m_ComId && ifs >> c.m_MaxNum)
+    {
+        vCom.push_back(c);
+    }
+    cout << "now the computer room number is: " << vCom.size() << endl;
+
+    ifs.close();
 };
 
 void Manager::operMenu()
@@ -94,12 +108,44 @@ void Manager::addPerson()
 
     system("pause");
     system("cls");
-    return;
+    
+    ofs.close();
+    this->initVector();
 
 };
 
+
+void printStudent(Student &s)
+{
+    cout << "student id: " << s.m_Id << "name: " << s.m_Name << "pwd: " << s.m_Pwd << endl;
+};
+
+void printTeacher(Teacher &t)
+{
+    cout << "teacher id: " << t.m_EmpId << "name: " << t.m_Name << "pwd: " << t.m_Pwd << endl;
+};
+
+
 void Manager::showPerson()
 {
+    cout << "please select the show content: " << endl;
+    cout << "1. student " << endl;
+    cout << "2. teacher " << endl;
+
+    int select = 0;
+
+    cin >> select;
+
+    if (select == 1)
+    {
+        cout << "all student info: " << endl;
+        for_each(vStu.begin(), vStu.end(), printStudent);
+    }
+    else
+    {
+        cout << "all teacher info: " << endl;
+        for_each(vTea.begin(), vTea.end(), printTeacher);
+    }
 
 };
 
@@ -110,7 +156,12 @@ void Manager::showComputer()
 
 void Manager::cleanFile()
 {
+    ofstream ofs(ORDER_FILE, ios::trunc);
+    ofs.close();
 
+    cout << "clean successfully." << endl;
+    system("pause");
+    system("cls");
 };
 
 void Manager::initVector()

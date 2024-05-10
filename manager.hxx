@@ -35,6 +35,7 @@ public:
 
     vector<Student> vStu;
     vector<Teacher> vTea;
+    vector<computerRoom> vCom;
 
 };
 
