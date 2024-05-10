@@ -1,4 +1,5 @@
 #include "manager.hxx"
+#include <istream>
 
 
 Manager::Manager()
@@ -10,6 +11,8 @@ Manager::Manager(string name, string pwd)
 {
     this->m_Name = name;
     this->m_Pwd = pwd;
+
+    this->initVector();
 };
 
 void Manager::operMenu()
@@ -90,6 +93,41 @@ void Manager::cleanFile()
 {
 
 };
+
+void Manager::initVector()
+{
+    ifstream ifs;
+    ifs.open(STUDENT_FILE, ios::in);
+    if (!ifs.is_open())
+    {
+        cout << "file read failed" << endl;
+        return;
+    }
+
+    vStu.clear();
+    vTea.clear();
+
+    Student s;
+    while (ifs >> s.m_Id && ifs >> s.m_Name && ifs >> s.m_Pwd)
+    {
+        vStu.push_back(s);
+    }
+    cout << "now the student number is: " << vStu.size() << endl;
+    ifs.close();
+
+    ifs.open(TEACHER_FILE, ios::in);
+
+    Teacher t;
+    while (ifs >> t.m_EmpId && ifs >> t.m_Name && ifs >> t.m_Pwd)
+    {
+        vTea.push_back(t);
+    }
+    cout << "now the teacher number is: " << vTea.size() << endl;
+
+    ifs.close();
+
+};
+
 
 
 void managerMenu(Identity * &manager)

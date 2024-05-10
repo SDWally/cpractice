@@ -1,8 +1,13 @@
 #pragma once
 #include <iostream>
+#include <vector>
 using namespace std;
 #include "identity.hxx"
 #include "globalFile.hxx"
+# include "student.hxx"
+# include "teacher.hxx"
+
+
 
 
 
@@ -23,6 +28,11 @@ public:
     void showComputer();
 
     void cleanFile();
+
+    void initVector();
+
+    vector<Student> vStu;
+    vector<Teacher> vTea;
 
 };
 
