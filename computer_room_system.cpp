@@ -61,11 +61,36 @@ void LoginIn(string fileName, int type)
     }
     else if (type == 2)
     {
-
+      int fId;
+      string fName;
+      string fPwd;
+      while (ifs >> fId && ifs >> fName && ifs >> fPwd)
+      {
+        if (id == fId && name == fName && pwd == fPwd)
+        {
+            cout << "teacher login success" << endl;
+            system("pause");
+            system("cls");
+            person = new Teacher(id, name, pwd);
+            return;
+        }
+      }
     }
     else if (type == 3)
     {
-
+      string fName;
+      string fPwd;
+      while ( ifs >> fName && ifs >> fPwd)
+      {
+        if (name == fName && pwd == fPwd)
+        {
+            cout << "manager login success" << endl;
+            system("pause");
+            system("cls");
+            person = new Manager(name, pwd);
+            return;
+        }
+      }
     }
     cout << "auth failed!" << endl;
     system("pause");
