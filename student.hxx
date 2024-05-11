@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
 using namespace std;
+#include <vector>
 #include "identity.hxx"
+#include "computerRoom.h"
 
 
 class Student :public Identity
@@ -23,4 +25,8 @@ public:
 
     int m_Id;
 
+    vector<computerRoom> vCom;
+
 };
+
+void studentMenu(Identity * &student);

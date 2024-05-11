@@ -32,7 +32,6 @@ Manager::Manager(string name, string pwd)
 void Manager::operMenu()
 {
     cout << "welcome  " << this->m_Name << "  login !" << endl;
-    cout << "please enter your identity." << endl;
     cout << "\t\t ---------------------------\n";
     cout << "\t\t |                          |\n";
     cout << "\t\t |      1. 添加账号          |\n";

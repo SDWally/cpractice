@@ -55,6 +55,7 @@ void LoginIn(string fileName, int type)
             system("pause");
             system("cls");
             person = new Student(id, name, pwd);
+            studentMenu(person);
             return;
         }
       }
