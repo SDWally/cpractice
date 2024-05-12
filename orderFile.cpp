@@ -29,7 +29,7 @@ OrderFile::OrderFile()
             m.insert(make_pair(key, value));
         }
 
-        int pos = interval.find(":");
+        pos = interval.find(":");
         if (pos != -1)
         {
             key = interval.substr(0, pos);
@@ -37,7 +37,7 @@ OrderFile::OrderFile()
             m.insert(make_pair(key, value));
         }
 
-        int pos = stuId.find(":");
+        pos = stuId.find(":");
         if (pos != -1)
         {
             key = stuId.substr(0, pos);
@@ -45,7 +45,7 @@ OrderFile::OrderFile()
             m.insert(make_pair(key, value));
         }
 
-        int pos = stuName.find(":");
+        pos = stuName.find(":");
         if (pos != -1)
         {
             key = stuName.substr(0, pos);
@@ -53,7 +53,7 @@ OrderFile::OrderFile()
             m.insert(make_pair(key, value));
         }
 
-        int pos = roomId.find(":");
+        pos = roomId.find(":");
         if (pos != -1)
         {
             key = roomId.substr(0, pos);
@@ -61,7 +61,7 @@ OrderFile::OrderFile()
             m.insert(make_pair(key, value));
         }
 
-        int pos = status.find(":");
+        pos = status.find(":");
         if (pos != -1)
         {
             key = status.substr(0, pos);

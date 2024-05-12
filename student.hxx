@@ -6,6 +6,7 @@ using namespace std;
 #include "computerRoom.h"
 
 
+
 class Student :public Identity
 {
 public:
