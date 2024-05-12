@@ -1,8 +1,6 @@
 #include "student.hxx"
 #include "globalFile.hxx"
 #include "orderFile.hxx"
-#include <istream>
-#include <ostream>
 
 
 Student::Student()
@@ -103,12 +101,12 @@ void Student::applyOrder()
     cout << "预约成功！审核中" << endl;
 
     ofstream ofs(ORDER_FILE, ios::app);
-    ofs << "date: " << date << " ";
-    ofs << "interval: " << interval << " ";
-    ofs << "stuId: " << this->m_Id << " ";
-    ofs << "stuName: " << this->m_Name << " ";
-    ofs << "roomId: " << room << " ";
-    ofs << "status: " << 1 << endl;
+    ofs << "date:" << date << " ";
+    ofs << "interval:" << interval << " ";
+    ofs << "stuId:" << this->m_Id << " ";
+    ofs << "stuName:" << this->m_Name << " ";
+    ofs << "roomId:" << room << " ";
+    ofs << "status:" << 1 << endl;
     
     ofs.close();
     system("pause");
@@ -128,6 +126,7 @@ void Student::showMyOrder()
         return;
     }
     
+    // cout << "total num: " << of.m_Size << endl;
     for (int i = 0; i < of.m_Size; i++)
     {
         if (atoi(of.m_orderData[i]["stuId"].c_str()) == this->m_Id)
@@ -159,7 +158,6 @@ void Student::showMyOrder()
 
     system("pause");
     system("cls");
-
 
 };
 void Student::showAllOrder()
@@ -258,7 +256,7 @@ void Student::cancelOrder()
                 break;
             }
             else{
-                of.m_orderData[v[select - 1]]["statis"] = "0";
+                of.m_orderData[v[select - 1]]["status"] = "0";
                 of.updateOrder();
                 cout << "已取消预约" << endl;
                 break;

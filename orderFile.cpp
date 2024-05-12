@@ -68,10 +68,10 @@ OrderFile::OrderFile()
             value = status.substr(pos + 1, status.size() - pos);
             m.insert(make_pair(key, value));
         }
-
+        // cout << "insert one" << endl;
+        // cout << roomId << endl;
         this->m_orderData.insert(make_pair(this->m_Size, m));
         this->m_Size++;
-
     }
 
 };
@@ -87,12 +87,12 @@ void OrderFile::updateOrder()
     ofstream ofs(ORDER_FILE, ios::out| ios::trunc);
     for (int i = 0; i < m_Size; i++)
     {
-        ofs << "date: " << this->m_orderData[i]["date"] << " ";
-        ofs << "interval: " << this->m_orderData[i]["interval"] << " ";
-        ofs << "stuId: " << this->m_orderData[i]["stuId"] << " ";
-        ofs << "stuName: " << this->m_orderData[i]["stuName"] << " ";
-        ofs << "roomId: " << this->m_orderData[i]["roomId"] << " ";
-        ofs << "status: " << this->m_orderData[i]["status"] << " ";
+        ofs << "date:" << this->m_orderData[i]["date"] << " ";
+        ofs << "interval:" << this->m_orderData[i]["interval"] << " ";
+        ofs << "stuId:" << this->m_orderData[i]["stuId"] << " ";
+        ofs << "stuName:" << this->m_orderData[i]["stuName"] << " ";
+        ofs << "roomId:" << this->m_orderData[i]["roomId"] << " ";
+        ofs << "status:" << this->m_orderData[i]["status"] << endl;
     }
     ofs.close();
 }
