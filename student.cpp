@@ -1,5 +1,4 @@
 #include "student.hxx"
-#include "computerRoom.h"
 #include "globalFile.hxx"
 #include <istream>
 #include <ostream>
@@ -121,7 +120,10 @@ void Student::showMyOrder()
 {
     
 };
-
+void Student::showAllOrder()
+{
+    
+};
 
 void Student::cancelOrder()
 {
