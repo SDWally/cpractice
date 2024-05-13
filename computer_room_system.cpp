@@ -73,6 +73,7 @@ void LoginIn(string fileName, int type)
             system("pause");
             system("cls");
             person = new Teacher(id, name, pwd);
+            TeacherMenu(person);
             return;
         }
       }

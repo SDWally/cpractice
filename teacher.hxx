@@ -1,8 +1,8 @@
 #pragma once
 # define _CRT_SECURE_NO_WARNINGS
-#include <iostream>
 using namespace std;
 #include "identity.hxx"
+#include "orderFile.hxx"
 
 
 class Teacher :public Identity
@@ -21,3 +21,5 @@ public:
     int m_EmpId;
 
 };
+
+void TeacherMenu(Identity* &teacher);
