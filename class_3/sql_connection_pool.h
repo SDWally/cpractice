@@ -2,6 +2,8 @@
 
 #include <mysql/mysql.h>
 #include "locker.h"
+#include "string.h"
+
 using namespace std;
 
 class connection_pool
@@ -28,7 +30,25 @@ private:
     locker lock;
     list<MYSQL *> connList;
     sem reserve;
+
+private:
+    string url;
+    string Port;
+    string User;
+    string PassWord;
+    string DatabaseName;
 }
 
+
+class connectionRAII
+{
+public:
+    connectionRAII(MYSQL **con, connection_pool *connPool);
+    ~connectionRAII();
+
+private:
+    MYSQL *conRAII;
+    connection_pool *poolRAII;
+};
 
 
