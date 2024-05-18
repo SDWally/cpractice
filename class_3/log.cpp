@@ -131,7 +131,7 @@ void Log::write_log(int level, const char *format, ...)
 
     if (m_is_async && !m_log_queue->full())
     {
-        m_log_queue.push(log_str);
+        m_log_queue->push(log_str);
     }
     else
     {

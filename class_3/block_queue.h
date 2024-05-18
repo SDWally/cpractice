@@ -45,7 +45,7 @@ public:
         m_mutex.unlock();
     }
 
-    void full()
+    bool full()
     {
         m_mutex.lock();
         if (m_size >= m_max_size)
