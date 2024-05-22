@@ -190,12 +190,145 @@ int main(int argc, char *argv[])
                 timer_lst.add_timer(timer);
 #endif
 
+#ifdef listenfdET
 
+                while(1)
+                {
+                    int connfd = accept(listenfd, (struct sockaddr *)&client_address, &client_addrlength);
+                    if (connfd < 0)
+                    {
+                        LOG_ERROR("%s:errno is: %d", "accept error", errno);
+                        break;
+                    }
+                    if (http_conn::m_user_count >= MAX_FD)
+                    {
+                        show_error(connfd, "Interval server busy");
+                        LOG_ERROR("%s", "Interval server busy");
+                        break;
+                    }
+                    users[connfd].init(connfd, client_address);
 
+                    users_timer[connfd].address = client_address;
+                    users_timer[connfd].sockfd = connfd;
+                    util_timer *timer = new util_timer;
+                    timer->user_data = &user_timer[connfd];
+                    time->cb_func = cb_func;
+                    time_t cur = time(NULL);
+                    timer->expire = cur + 3 * TIMESLOT;
+                    users_timer[connfd].timer = timer;
+                    timer_lst.add_timer[timer];
+                }
+                continue;
+#endif
+            }
+            else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+            {
+                util_timer *timer = users_timer[sockfd].timer;
+                timer->cb_func(&user_timer[sockfd]);
+
+                if (timer)
+                {
+                    timer_lst.del_timer(timer);
+                }
+            }
+            else if ((sockfd == pipefd[0]) && (events[i].events & EPOLLIN))
+            {
+                int sig;
+                char signals[1024];
+                ret = recv(pipefd[0], signals, sizeof(signals), 0);
+                if (ret == -1)
+                {
+                    continue;
+                }
+                else if (ret == 0)
+                {
+                    continue;
+                }
+                else
+                {
+                    for (int i = 0; i < ret; ++i)
+                    {
+                        switch (signals[i])
+                        {
+                        case SIGALRM:
+                        {
+                            timeout = true;
+                            break;
+                        }
+                        case SIGTERM:
+                        {
+                            stop_server = true;
+                        }
+                        }
+                    }
+                }
+            }
+            else if (events[i].events & EPOLLIN)
+            {
+                util_timer *timer = users_timer[sockfd].timer;
+                if (users[sockfd].read_once())
+                {
+                    LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
+                    Log::get_instance()->flush();
+                    pool->append(users + sockfd);
+
+                    if (timer)
+                    {
+                        time_t cur = time(NULL);
+                        timer->expire = cur + 3 * TIMESLOT;
+                        LOG_INFO("%s", "adjust timer once");
+                        Log::get_instance()->flush();
+                        timer_lst.adjust_timer(timer);
+                    }
+                }
+                else
+                {
+                    timer->cb_func(&users_timer[sockfd]);
+                    if (timer)
+                    {
+                        timer_lst.del_timer(timer);
+                    }
+                }
+            }
+            else if (events[i].events & EPOLLOUT)
+            {
+                util_timer *timer = users_timer[sockfd].timer;
+                if (users[sockfd].write())
+                {
+                    LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_addresss()->sin_addr));
+                    Log::get_instance()->flush();
+
+                    if (timer)
+                    {
+                        timer_t cur = time(NULL);
+                        timer->expire = cur + 3 * TIMESLOT;
+                        LOG_INFO("%s", "adjust timer once");
+                        Log::get_instance()->flush();
+                        timer_lst.adjust_timer(timer);
+                    }
+                }
+                else
+                {
+                    timer->cb_func(&user_timer[sockfd]);
+                    if (timer)
+                    {
+                        timer_lst.del_timer(timer);
+                    }
+                }
             }
         }
+        if (timeout)
+        {
+            timer_handler();
+            timeout = false;
+        }
     }
-
-
-
+    close(epollfd);
+    close(listenfd);
+    close(pipefd[1]);
+    close(pipefd[0]);
+    delete[] users;
+    delete[] users_timer;
+    delete pool;
+    return 0;
 }
