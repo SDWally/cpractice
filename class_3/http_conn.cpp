@@ -378,7 +378,7 @@ http_conn::HTTP_CODE http_conn::process_read()
             {
                 return do_request();
             }
-            line_status = LINE_OPEN:
+            line_status = LINE_OPEN;
             break;
         }
         default:
@@ -467,7 +467,7 @@ http_conn::HTTP_CODE http_conn::do_request()
 
     if (*(p + 1) == '0')
     {
-        char *m_url_real = (char *)molloc(sizeof(char) * 200);
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
         strcpy(m_url_real, "/register.html");
         strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
 
@@ -475,7 +475,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
     if (*(p + 1) == '1')
     {
-        char *m_url_real = (char *)molloc(sizeof(char) * 200);
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
         strcpy(m_url_real, "/log.html");
         strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
 
@@ -483,7 +483,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
         if (*(p + 1) == '5')
     {
-        char *m_url_real = (char *)molloc(sizeof(char) * 200);
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
         strcpy(m_url_real, "/picture.html");
         strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
 
@@ -491,7 +491,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
         if (*(p + 1) == '6')
     {
-        char *m_url_real = (char *)molloc(sizeof(char) * 200);
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
         strcpy(m_url_real, "/video.html");
         strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
 
@@ -499,7 +499,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
         if (*(p + 1) == '7')
     {
-        char *m_url_real = (char *)molloc(sizeof(char) * 200);
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
         strcpy(m_url_real, "/fans.html");
         strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
 
@@ -514,7 +514,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     {
         return NO_RESOURCE;
     }
-    if (stat(m_file_stat.st_mode, & S_IROTH))
+    if (stat(m_file_stat.st_mode, &S_IROTH))
     {
         return FORBIDDEN_REQUEST;
     }
@@ -524,7 +524,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     }
 
     int fd = open(m_real_file, O_RDONLY);
-    m_file_address = (char *)mmap(0, m_file_stat.st_size, PROT_HEAD, MAP_PRIVATE, fd, 0);
+    m_file_address = (char *)mmap(0, m_file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
     return FILE_REQUEST;
 }
@@ -539,7 +539,7 @@ void http_conn::unmap()
     }
 }
 
-void http_conn::write()
+bool http_conn::write()
 {
     int temp = 0;
 
@@ -705,7 +705,7 @@ bool http_conn::process_write(HTTP_CODE ret)
             m_iv[1].iov_base = m_file_address;
             m_iv[1].iov_len = m_file_stat.st_size;
             m_iv_count = 2;
-            bytes_to_send = m_write_idx + m_file_size.st_size;
+            bytes_to_send = m_write_idx + m_file_stat.st_size;
             return true;
         }
         else

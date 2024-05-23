@@ -2,7 +2,12 @@
 
 #include <mysql/mysql.h>
 #include "locker.h"
+#include <string.h>
 #include <string>
+#include <list>
+#include <iostream>
+#include <stdio.h>
+
 
 using namespace std;
 

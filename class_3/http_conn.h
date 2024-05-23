@@ -44,7 +44,7 @@ public:
     {
         CHECK_STATE_REQUESTLINE = 0,
         CHECK_STATE_HEADER,
-        CHECK_STATE_CONNECT
+        CHECK_STATE_CONTENT
     };
     enum HTTP_CODE
     {
