@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     http_conn *users = new http_conn[MAX_FD];
     assert(users);
     users->initmysql_result(connPool);
-    int listenfd = socket(PF_INET, SOCK_STREM, 0);
+    int listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(listenfd >= 0);
 
     int ret = 0;
