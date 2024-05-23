@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
                 util_timer *timer = users_timer[sockfd].timer;
-                timer->cb_func(&user_timer[sockfd]);
+                timer->cb_func(&users_timer[sockfd]);
 
                 if (timer)
                 {
@@ -295,12 +295,12 @@ int main(int argc, char *argv[])
                 util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].write())
                 {
-                    LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_addresss()->sin_addr));
+                    LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
                     Log::get_instance()->flush();
 
                     if (timer)
                     {
-                        timer_t cur = time(NULL);
+                        time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
                         LOG_INFO("%s", "adjust timer once");
                         Log::get_instance()->flush();

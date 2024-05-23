@@ -7,6 +7,7 @@
 #include <list>
 #include <iostream>
 #include <stdio.h>
+#include <error.h>
 
 
 using namespace std;
