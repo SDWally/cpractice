@@ -37,7 +37,7 @@ void sig_handler(int sig)
 {
     int save_errno = errno;
     int msg = sig;
-    send(pipefd[1], (char *) &msg, 1, 0)
+    send(pipefd[1], (char *) &msg, 1, 0);
     errno = save_errno;
 }
 
@@ -111,18 +111,18 @@ int main(int argc, char *argv[])
     http_conn *users = new http_conn[MAX_FD];
     assert(users);
     users->initmysql_result(connPool);
-    int listenfd = socker(PF_INET, SOCK_STREM, 0);
+    int listenfd = socket(PF_INET, SOCK_STREM, 0);
     assert(listenfd >= 0);
 
     int ret = 0;
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
-    address.sim_family = AF_INET;
+    address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = htonl(port);
 
     int flag = 1;
-    setsocket(listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
     ret = bind(listenfd, (struct sockaddr *)&address, sizeof(address));
     assert(ret >= 0);
     ret = listen(listenfd, 5);
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    timer->cb_func(&user_timer[sockfd]);
+                    timer->cb_func(&users_timer[sockfd]);
                     if (timer)
                     {
                         timer_lst.del_timer(timer);

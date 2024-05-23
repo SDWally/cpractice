@@ -27,10 +27,10 @@ void http_conn::initmysql_result(connection_pool *connPool)
 {
     MYSQL *mysql = NULL;
     connectionRAII mysqlcon(&mysql, connPool);
-    if (mysql_query(mysql, "select username, passwd from user")
+    if (mysql_query(mysql, "select username, passwd from user"))
     {
         LOG_ERROR("select error: %s\n", mysql_error(mysql));
-    })
+    }
     MYSQL_RES *result = mysql_store_result(mysql);
     int num_fields = mysql_num_fields(result);
     MYSQL_FIELD *fields = mysql_fetch_fields(result);
@@ -98,7 +98,7 @@ void modfd(int epollfd, int fd, int ev)
     event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
 #endif
     
-    epoll_ctl(epollfd, EPOLL_STL_MOD, fd, &event);
+    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
 
 
@@ -117,7 +117,7 @@ void http_conn::close_conn(bool real_close)
 
 void http_conn::init(int sockfd, const sockaddr_in &addr)
 {
-    m_sockfd = sockdf;
+    m_sockfd = sockfd;
     m_address = addr;
     addfd(m_epollfd, sockfd, true);
     m_user_count++;
@@ -152,7 +152,7 @@ http_conn::LINE_STATUS http_conn::parse_line()
     char temp;
     for (;m_checked_idx < m_read_idx;++m_checked_idx)
     {
-        temp = m_read_buf[m_check_idx];
+        temp = m_read_buf[m_checked_idx];
         if (temp == '\r')
         {
             if ((m_checked_idx + 1) == m_read_idx)
@@ -253,13 +253,13 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     {
         return BAD_REQUEST;
     }
-    *m_version++ = ' \0';
-    m_version += strspn(m_version. " \t");
+    *m_version++ = " \0";
+    m_version += strspn(m_version, " \t");
     if (strcasecmp(m_version, "HTTP/1.1") != 0)
     {
         return BAD_REQUEST;
     }
-    if (strcasecmp(m_url, "http://", 7) == 0)
+    if (strncasecmp(m_url, "http://", 7) == 0)
     {
         m_url += 7;
         m_url = strchr(m_url, '/');
@@ -307,10 +307,10 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     else if (strncasecmp(text, "Content-length:", 15) == 0)
     {
         text += 15;
-        text += strspn(text, ' \t');
+        text += strspn(text, " \t");
         m_content_length = atol(text);
     }
-    else if (strcasecmp(text, "Host:", 5) == 0)
+    else if (strncasecmp(text, "Host:", 5) == 0)
     {
         text += 5;
         text += strspn(text, " \t");
@@ -346,7 +346,7 @@ http_conn::HTTP_CODE http_conn::process_read()
         text = get_line();
         m_start_line = m_checked_idx;
         LOG_INFO("%s", text);
-        Log::get_instance->flush();
+        Log::get_instance()->flush();
         switch (m_check_state)
         {
         case CHECK_STATE_REQUESTLINE:
@@ -447,7 +447,7 @@ http_conn::HTTP_CODE http_conn::do_request()
             }
             else
             {
-                strcpy(m_url. "registerError.html")
+                strcpy(m_url, "registerError.html");
             }
 
         }
@@ -514,7 +514,7 @@ http_conn::HTTP_CODE http_conn::do_request()
     {
         return NO_RESOURCE;
     }
-    if (stat(m_file_stat.st_mode, &S_IROTH))
+    if (!(m_file_stat.st_mode & S_IROTH))
     {
         return FORBIDDEN_REQUEST;
     }
@@ -562,7 +562,7 @@ bool http_conn::write()
                 return true;
             }
             unmap();
-            reutrn false;
+            return false;
         }
 
         bytes_have_send += temp;
@@ -576,7 +576,7 @@ bool http_conn::write()
         else
         {
             m_iv[0].iov_base = m_write_buf + bytes_have_send;
-            m_iv[0],iov_len = m_iv[0].iov_len - bytes_have_send;
+            m_iv[0].iov_len = m_iv[0].iov_len - bytes_have_send;
         }
 
         if (bytes_to_send <= 0)
@@ -621,7 +621,7 @@ bool http_conn::add_response(const char *format, ...)
 
 bool http_conn::add_status_line(int status, const char *title)
 {
-    return add_response("%s %d %s\r\n", "HTTP/1.1", status, title)
+    return add_response("%s %d %s\r\n", "HTTP/1.1", status, title);
 }
 
 bool http_conn::add_headers(int content_len)

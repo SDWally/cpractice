@@ -13,7 +13,7 @@ connection_pool::connection_pool()
 connection_pool *connection_pool::GetInstance()
 {
     static connection_pool connPool;
-    return &connPool
+    return &connPool;
 }
 
 void connection_pool::init(string url, string User, string PassWord, string DBName, int Port, unsigned int MaxConn)
