@@ -298,8 +298,8 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     else if (strncasecmp(text, "Connection:", 11) == 0)
     {
         text += 11;
-        text += strspn(text, ' \t');
-        if (strcasecmp(text, 'keep-alive') == 0)
+        text += strspn(text, " \t");
+        if (strcasecmp(text, "keep-alive") == 0)
         {
             m_linger = true;
         }
@@ -569,7 +569,7 @@ void http_conn::write()
         bytes_to_send -= temp;
         if (bytes_have_send >= m_iv[0].iov_len)
         {
-            m_iv[0].iov_len = 0；
+            m_iv[0].iov_len = 0;
             m_iv[1].iov_base = m_file_address + (bytes_have_send - m_write_idx);
             m_iv[1].iov_len = bytes_to_send;
         }

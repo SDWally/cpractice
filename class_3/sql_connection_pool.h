@@ -2,7 +2,7 @@
 
 #include <mysql/mysql.h>
 #include "locker.h"
-#include "string.h"
+#include <string>
 
 using namespace std;
 
@@ -37,7 +37,7 @@ private:
     string User;
     string PassWord;
     string DatabaseName;
-}
+};
 
 
 class connectionRAII

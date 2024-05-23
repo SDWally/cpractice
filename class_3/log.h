@@ -62,3 +62,4 @@ private:
 #define LOG_INFO(format, ...) Log::get_instance()->write_log(0, format, ##__VA_ARGS)
 #define LOG_WARN(format, ...) Log::get_instance()->write_log(0, format, ##__VA_ARGS)
 #define LOG_ERROR(format, ...) Log::get_instance()->write_log(0, format, ##__VA_ARGS)
+

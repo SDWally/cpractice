@@ -122,14 +122,14 @@ public:
             m_mutex.unlock();
             return false;
         }
-    }
+        m_back = (m_back + 1) % m_max_size;
+        m_array[m_back] = item;
+        m_size++;
+        m_cond.broadcast();
+        m_mutex.unlock();
+        return true;
 
-    m_back = (m_back + 1) % m_max_size;
-    m_array[m_back] = item;
-    m_size++;
-    m_cond.broadcast();
-    m_mutex.unlock();
-    return true;
+    }
 
     bool pop(T &item)
     {

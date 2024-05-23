@@ -30,7 +30,7 @@ public:
     static const int WRITE_BUFFER_SIZE = 1024;
     enum METHOD
     {
-        GET = 0;
+        GET = 0,
         POST,
         HEAD,
         PUT,
@@ -42,7 +42,7 @@ public:
     };
     enum CHECK_STATE
     {
-        CHECK_STATE_REQUESTLINE = 0;
+        CHECK_STATE_REQUESTLINE = 0,
         CHECK_STATE_HEADER,
         CHECK_STATE_CONNECT
     };
