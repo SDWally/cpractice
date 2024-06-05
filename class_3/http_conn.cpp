@@ -18,19 +18,24 @@ const char *error_404_form = "The requested file was not found on this server.\n
 const char *error_500_title = "Interval Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
-const char *doc_root = "/home/class3/root/";
+const char *doc_root = "/home/langirl/tinyweb/root";
 
 map<string, string> users;
 locker m_lock;
 
 void http_conn::initmysql_result(connection_pool *connPool)
 {
+    cout << "debug mysql..." << endl;
     MYSQL *mysql = NULL;
     connectionRAII mysqlcon(&mysql, connPool);
+    
+    cout << "debug mysql enter query..." << endl;
     if (mysql_query(mysql, "select username, passwd from user"))
     {
+        cout << "debug enter query error..." << endl;
         LOG_ERROR("select error: %s\n", mysql_error(mysql));
     }
+    cout << "debug query..." << endl;
     MYSQL_RES *result = mysql_store_result(mysql);
     int num_fields = mysql_num_fields(result);
     MYSQL_FIELD *fields = mysql_fetch_fields(result);
@@ -149,6 +154,7 @@ void http_conn::init()
 
 http_conn::LINE_STATUS http_conn::parse_line()
 {
+    cout << "enter func parse line" << endl;
     char temp;
     for (;m_checked_idx < m_read_idx;++m_checked_idx)
     {
@@ -225,19 +231,77 @@ bool http_conn::read_once()
 }
 
 
+// http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
+// {
+//     m_url = strpbrk(text, " \t");
+//     if (!m_url)
+//     {
+//         return BAD_REQUEST;
+//     }
+//     *m_url++ = '\0';
+//     char *method = text;
+//     if (strcasecmp(method, "GET") == 0)
+//     {
+//         m_method = GET;
+//     }
+//     else if (strcasecmp(method, "POST") == 0)
+//     {
+//         m_method = POST;
+//         cgi = 1;
+//     }
+//     else
+//     {
+//         return BAD_REQUEST;
+//     }
+//     m_url += strspn(m_url, " \t");
+//     m_version = strpbrk(m_url, " \t");
+//     if (!m_version)
+//     {
+//         return BAD_REQUEST;
+//     }
+//     *m_version++ = '\0';
+//     m_version += strspn(m_version, " \t");
+//     if (strcasecmp(m_version, "HTTP/1.1") != 0)
+//     {
+//         return BAD_REQUEST;
+//     }
+//     if (strncasecmp(m_url, "http://", 7) == 0)
+//     {
+//         m_url += 7;
+//         m_url = strchr(m_url, '/');
+//     }
+
+//     if (strncasecmp(m_url, "https://", 8) == 0)
+//     {
+//         m_url += 8;
+//         m_url = strchr(m_url, '/');
+//     }
+
+//     if (!m_url || m_url[0] != '/')
+//     {
+//         return BAD_REQUEST;
+//     }
+//     if (strlen(m_url) == 1)
+//     {
+//         strcat(m_url, "judge.html");
+//     }
+//     m_check_state = CHECK_STATE_HEADER;
+//     return NO_REQUEST;
+// }
+
 http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
 {
+    cout << text << endl;
     m_url = strpbrk(text, " \t");
     if (!m_url)
     {
+        cout << "m url ptr null" << endl;
         return BAD_REQUEST;
     }
     *m_url++ = '\0';
     char *method = text;
     if (strcasecmp(method, "GET") == 0)
-    {
         m_method = GET;
-    }
     else if (strcasecmp(method, "POST") == 0)
     {
         m_method = POST;
@@ -245,20 +309,26 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     }
     else
     {
+        cout << "method not surpport." << endl;
         return BAD_REQUEST;
     }
+        
     m_url += strspn(m_url, " \t");
     m_version = strpbrk(m_url, " \t");
-    if (!m_version)
-    {
+    if (!m_version) {
+        cout << "version not surpport." << endl;
         return BAD_REQUEST;
     }
+        
     *m_version++ = '\0';
     m_version += strspn(m_version, " \t");
+    cout << m_version << endl;
     if (strcasecmp(m_version, "HTTP/1.1") != 0)
     {
+        cout << "version not surpport 1.1" << endl;
         return BAD_REQUEST;
     }
+        
     if (strncasecmp(m_url, "http://", 7) == 0)
     {
         m_url += 7;
@@ -273,12 +343,13 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
 
     if (!m_url || m_url[0] != '/')
     {
+        cout << "m url // error" << endl;
         return BAD_REQUEST;
     }
+        
+    //当url为/时，显示判断界面
     if (strlen(m_url) == 1)
-    {
         strcat(m_url, "judge.html");
-    }
     m_check_state = CHECK_STATE_HEADER;
     return NO_REQUEST;
 }
@@ -354,12 +425,14 @@ http_conn::HTTP_CODE http_conn::process_read()
             ret = parse_request_line(text);
             if (ret == BAD_REQUEST)
             {
+                cout << "process_read BAD_REQUEST" << endl;
                 return BAD_REQUEST;
             }
             break;
         }
         case CHECK_STATE_HEADER:
         {
+            cout << "process_read CHECK_STATE_HEADER" << endl;
             ret = parse_headers(text);
             if (ret == BAD_REQUEST)
             {
@@ -373,6 +446,7 @@ http_conn::HTTP_CODE http_conn::process_read()
         }
         case CHECK_STATE_CONTENT:
         {
+            cout << "process_read CHECK_STATE_CONTENT" << endl;
             ret = parse_content(text);
             if (ret == GET_REQUEST)
             {
@@ -383,10 +457,12 @@ http_conn::HTTP_CODE http_conn::process_read()
         }
         default:
         {
+            cout << "process_read return INTERNAL_ERROR" << endl;
             return INTERNAL_ERROR;
         }
         }
     }
+    cout << "process_read return no request" << endl;
     return NO_REQUEST;
 }
 
@@ -598,23 +674,53 @@ bool http_conn::write()
 
 }
 
+// bool http_conn::add_response(const char *format, ...)
+// {
+//     if (m_write_idx >= WRITE_BUFFER_SIZE)
+//     {
+//         return false;
+//     }
+//     va_list arg_list;
+//     va_start(arg_list, format);
+//     int len = vsnprintf(m_write_buf + m_write_idx, WRITE_BUFFER_SIZE - 1 - m_write_idx, format, arg_list);
+//     if (len >= (WRITE_BUFFER_SIZE - 1 - m_write_idx))
+//     {
+//         va_end(arg_list);
+//         return false;
+//     }
+//     m_write_idx += len;
+//     va_end(arg_list);
+//     LOG_INFO("request:%s", m_write_buf);
+//     Log::get_instance()->flush();
+//     return true;
+// }
+
 bool http_conn::add_response(const char *format, ...)
 {
     if (m_write_idx >= WRITE_BUFFER_SIZE)
-    {
         return false;
-    }
     va_list arg_list;
     va_start(arg_list, format);
+    cout << "add response 1" << endl;
+    cout << m_write_buf << endl;
+    cout << m_write_idx << endl;
+    cout << format << endl;
+    cout << arg_list << endl;
+    cout << m_write_buf + m_write_idx << endl;
+    // cout << "add response 1" << endl;
     int len = vsnprintf(m_write_buf + m_write_idx, WRITE_BUFFER_SIZE - 1 - m_write_idx, format, arg_list);
+    cout << "add response 2" << endl;
     if (len >= (WRITE_BUFFER_SIZE - 1 - m_write_idx))
     {
+        cout << "add response 3" << endl;
         va_end(arg_list);
         return false;
     }
+    cout << "add response 4" << endl;
     m_write_idx += len;
     va_end(arg_list);
     LOG_INFO("request:%s", m_write_buf);
+    cout << "add response 5" << endl;
     Log::get_instance()->flush();
     return true;
 }
@@ -626,15 +732,18 @@ bool http_conn::add_status_line(int status, const char *title)
 
 bool http_conn::add_headers(int content_len)
 {
+    cout << "add_content_length" << endl;
     add_content_length(content_len);
+    cout << "add_linger" << endl;
     add_linger();
+    cout << "add_blank_line" << endl;
     add_blank_line();
 }
 
 
 bool http_conn::add_content_length(int content_len)
 {
-    return add_response("Content-length:%s\r\n", content_len);
+    return add_response("Content-length:%d\r\n", content_len);
 }
 
 
@@ -673,11 +782,19 @@ bool http_conn::process_write(HTTP_CODE ret)
         break;
     }
     case BAD_REQUEST:
-    {
+    {   
+        cout << "add status line" << endl;
         add_status_line(404, error_404_title);
+        if (!m_write_buf)
+        {
+            cout << "bad ptr null!!" << endl;
+        }
+        cout << "add headers line" << endl;
         add_headers(strlen(error_404_form));
+        cout << "finish add headers" << endl;
         if (!add_content(error_404_form))
         {
+            cout << "add content false" << endl;
             return false;
         }
         break;
@@ -742,7 +859,9 @@ void http_conn::process()
     bool write_ret = process_write(read_ret);
     if (!write_ret)
     {
+        cout << "close conn" << endl;
         close_conn();
     }
+    cout << "modfd out" << endl;
     modfd(m_epollfd, m_sockfd, EPOLLOUT);
 }
