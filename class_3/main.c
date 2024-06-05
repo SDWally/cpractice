@@ -61,6 +61,7 @@ void timer_handler()
     alarm(TIMESLOT);
 }
 
+
 void cb_func(client_data *user_data)
 {
     epoll_ctl(epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);
@@ -80,24 +81,28 @@ void show_error(int connfd, const char *info)
 
 int main(int argc, char *argv[])
 {
+    cout << "start main func..." << endl;
 #ifdef ASYNLOG
     Log::get_instance()->init("ServerLog", 2000, 800000, 8);
 #endif
 #ifdef SYNLOG
-    Log::get_instance()->init("ServerLog", 2000, 800000, 8);
+    Log::get_instance()->init("ServerLog", 2000, 800000, 0);
 #endif
-
+    cout << "start arg check..." << endl;
     if (argc <= 1)
     {
         printf("usage: %s ip_address port number\n"), basename(argv[0]);
         return 1;
     }
+    LOG_INFO("%s", "server start");
     int port = atol(argv[1]);
+    // int port = 9007;
     addsig(SIGPIPE, SIG_IGN);
 
     connection_pool *connPool = connection_pool::GetInstance();
-    connPool->init("localhost", "root", "root", "qgydb", 3306, 8);
+    connPool->init("139.9.175.149", "tiny", "tiny", "tinyweb", 3306, 10);
     
+    cout << "init mysql pool..." << endl;
     threadpool<http_conn> *pool = NULL;
     try
     {
@@ -110,16 +115,20 @@ int main(int argc, char *argv[])
 
     http_conn *users = new http_conn[MAX_FD];
     assert(users);
+    
+    cout << "create mysqlresult ..." << endl;
     users->initmysql_result(connPool);
+    cout << "init result start..." << endl;
     int listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(listenfd >= 0);
 
+    cout << "socket start..." << endl;
     int ret = 0;
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htonl(port);
+    address.sin_port = htons(port);
 
     int flag = 1;
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
@@ -127,7 +136,8 @@ int main(int argc, char *argv[])
     assert(ret >= 0);
     ret = listen(listenfd, 5);
     assert(ret >= 0);
-
+    
+    cout << "listen start..." << endl;
     epoll_event events[MAX_EVENT_NUMBER];
     epollfd = epoll_create(5);
     assert(epollfd != -1);
@@ -149,14 +159,20 @@ int main(int argc, char *argv[])
     bool timeout = false;
     alarm(TIMESLOT);
 
+    cout << "server start, wait connect..." << endl;
     while (!stop_server)
     {
+        cout << "server enter epoll wait ..." << endl;
         int number = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+        cout << "server enter number check ..." << endl;
+        cout << number << endl;
         if (number < 0 && errno != EINTR)
         {
             LOG_ERROR("%s", "epoll failure");
             break;
         }
+        cout << "server get connect..." << endl;
+        
 
         for (int i = 0; i < number; i++)
         {
@@ -167,27 +183,36 @@ int main(int argc, char *argv[])
                 socklen_t client_addrlength = sizeof(client_address);
 #ifdef listenfdLT
                 int connfd = accept(listenfd, (struct sockaddr *)&client_address, &client_addrlength);
+
+                cout << "server accept..." << endl;
+
                 if (connfd < 0)
                 {
+                    cout << "server accept  connfd ..." << endl;
                     LOG_ERROR("%s:errno is: %d", "accept error", errno);
                     continue;
                 }
                 if (http_conn::m_user_count >= MAX_FD)
                 {
+                    cout << "server accept http conn ..." << endl;
                     show_error(connfd, "Internal server busy");
                     LOG_ERROR("%s", "Internal server busy");
                     continue;
                 }               
+                cout << "server accept  1 ..." << endl;
                 users[connfd].init(connfd, client_address);
                 users_timer[connfd].address = client_address;
                 users_timer[connfd].sockfd = connfd;
+                cout << "server accept  2 ..." << endl;
                 util_timer *timer = new util_timer;
                 timer->user_data = &users_timer[connfd];
                 timer->cb_func = cb_func;
                 time_t cur = time(NULL);
+                cout << "server accept  3 ..." << endl;
                 timer->expire = cur + 3 * TIMESLOT;
                 users_timer[connfd].timer = timer;
                 timer_lst.add_timer(timer);
+                cout << "server accept  4 ..." << endl;
 #endif
 
 #ifdef listenfdET
@@ -220,9 +245,11 @@ int main(int argc, char *argv[])
                 }
                 continue;
 #endif
+            cout << "server finish if else ..." << endl;
             }
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
+                cout << "server enter epoll ..." << endl;
                 util_timer *timer = users_timer[sockfd].timer;
                 timer->cb_func(&users_timer[sockfd]);
 
@@ -233,6 +260,7 @@ int main(int argc, char *argv[])
             }
             else if ((sockfd == pipefd[0]) && (events[i].events & EPOLLIN))
             {
+                cout << "server enter pipefd ..." << endl;
                 int sig;
                 char signals[1024];
                 ret = recv(pipefd[0], signals, sizeof(signals), 0);
@@ -265,24 +293,30 @@ int main(int argc, char *argv[])
             }
             else if (events[i].events & EPOLLIN)
             {
+                cout << "server enter event poll ..." << endl;
                 util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].read_once())
                 {
+                    cout << "server enter read once ..." << endl;
                     LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
                     Log::get_instance()->flush();
                     pool->append(users + sockfd);
-
                     if (timer)
                     {
+                        cout << "server enter once timer ..." << endl;
                         time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
+                        cout << "server enter log ..." << endl;
                         LOG_INFO("%s", "adjust timer once");
                         Log::get_instance()->flush();
+                        cout << "server enter adjust timer ..." << endl;
                         timer_lst.adjust_timer(timer);
                     }
+                    cout << "server finish adjust timer ..." << endl;
                 }
                 else
                 {
+                    cout << "server enter timer ..." << endl;
                     timer->cb_func(&users_timer[sockfd]);
                     if (timer)
                     {
@@ -292,6 +326,7 @@ int main(int argc, char *argv[])
             }
             else if (events[i].events & EPOLLOUT)
             {
+                cout << "server enter epollout ..." << endl;
                 util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].write())
                 {
@@ -319,16 +354,23 @@ int main(int argc, char *argv[])
         }
         if (timeout)
         {
+            cout << "enter timeout ..." << endl;
             timer_handler();
             timeout = false;
         }
+        cout << "finish connect ..." << endl;
     }
+    cout << "server close epollfd ..." << endl;
     close(epollfd);
     close(listenfd);
+    cout << "server close epollfd 1 ..." << endl;
     close(pipefd[1]);
+    cout << "server close epollfd 2 ..." << endl;
     close(pipefd[0]);
+    cout << "server close epollfd 3 ..." << endl;
     delete[] users;
     delete[] users_timer;
+    cout << "server close epollfd 4 ..." << endl;
     delete pool;
     return 0;
 }
