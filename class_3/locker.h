@@ -3,6 +3,9 @@
 #include <exception>
 #include <pthread.h>
 #include <semaphore.h>
+#include <iostream>
+
+using namespace std;
 
 class sem
 {
@@ -16,8 +19,9 @@ public:
     }
     sem(int num)
     {
-        if (sem_init(&m_sem, 0, 0) != 0)
+        if (sem_init(&m_sem, 0, num) != 0)
         {
+            cout << "sem init error" << endl;
             throw std::exception();
         }
     }
@@ -27,16 +31,21 @@ public:
     }
     bool wait()
     {
-        return sem_wait(&m_sem) == 0;
+        cout << "call sem waittttt" << endl;
+        sem_wait(&m_sem) == 0;
+        cout << "call sem return" << endl;
+        return true;
     }
     bool post()
     {
+        cout << "call sem post" << endl;
         return sem_post(&m_sem) == 0;
     }
 
 private:
     sem_t m_sem;
 };
+
 
 
 class locker
