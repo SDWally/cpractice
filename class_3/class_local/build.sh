@@ -1,1 +1,1 @@
-g++ -o cal_minbar cal_minbar.cxx -std=c++11
+g++ -o generate_kline generate_kline.cpp -std=c++11

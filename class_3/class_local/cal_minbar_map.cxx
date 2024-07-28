@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
-// #include <iomanip>
+#include <unordered_map>
 
 
 struct TickData {
@@ -77,8 +77,8 @@ void readCSV(const std::string& filename,  std::vector<TickData>& data) {
 }
 
 
-void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string, std::vector<KLineData>>& kLines, int interval) {
-    std::map<std::string, KLineData> currentKLine;
+void generateKLineByTick(const std::vector<TickData>& data, std::unordered_map<std::string, std::vector<KLineData>>& kLines, int interval) {
+    std::unordered_map<std::string, KLineData> currentKLine;
     for (const auto& tick : data) {
         int intervalStartTime = (tick.nTime / (100000)) / (interval) * (interval);
         if (intervalStartTime < 930 || intervalStartTime > 1500) {
@@ -102,7 +102,7 @@ void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string
 }
 
 
-void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& data, std::map<std::string, std::vector<KLineData>>& kLines, int interval) {
+void generateKLineByKline(const std::unordered_map<std::string, std::vector<KLineData>>& data, std::unordered_map<std::string, std::vector<KLineData>>& kLines, int interval) {
     for (const auto& pair : data) {
         // 第一个元素初始化当前K线；
         KLineData currentKLine(pair.second[0]);
@@ -123,7 +123,7 @@ void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& d
 }
 
 
-void writeCSV(const std::string& filename, const std::map<std::string, std::vector<KLineData>>& kLines) {
+void writeCSV(const std::string& filename, std::unordered_map<std::string, std::vector<KLineData>>& kLines) {
     std::ofstream file(filename);
     file << "szWindCode,startTime,open,high,low,close\n";
     for (const auto& pair : kLines) {
@@ -143,13 +143,13 @@ int main() {
     std::vector<TickData> tickData;
     readCSV(fileName, tickData);
     // kline 1
-    std::map<std::string, std::vector<KLineData>> kLines1min;
+    std::unordered_map<std::string, std::vector<KLineData>> kLines1min;
     generateKLineByTick(tickData, kLines1min, 1);
     writeCSV("kline_1min.csv", kLines1min);
     // kline 5, 10, 30
     std::vector<int> KlineNum({5, 10, 30});
     for (const auto& num : KlineNum) {
-        std::map<std::string, std::vector<KLineData>> kLinesNmin;
+        std::unordered_map<std::string, std::vector<KLineData>> kLinesNmin;
         generateKLineByKline(kLines1min, kLinesNmin, num);
         writeCSV("kline_" + std::to_string(num) + "min.csv", kLinesNmin);
     }
