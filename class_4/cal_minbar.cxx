@@ -4,14 +4,13 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <iomanip>
+// #include <iomanip>
 
-using namespace std;
 
 struct TickData {
     std::string szWindCode;
     int nTradingDay;
-    int nTime; // 假设时间已经转换为总毫秒数
+    int nTime; // 毫秒,如 93001000
     double nMatch;
 };
 
@@ -20,8 +19,19 @@ struct KLineData {
     double high;
     double low;
     double close;
-    int startTime;
+    int startTime;   // 形如1030的分钟整型
+    int minuteTime;  // 将小时转化为分钟的整型，便于采样
 };
+
+// 1130 —> 11 * 60 + 30
+int sixtyToDecimal(int sixtyTime) {
+    return (sixtyTime / 100) * 60 + (sixtyTime % 100);
+}
+// 11 * 60 + 30 -> 1130
+int DecimalTosixty(int DecimalTime) {
+    return (DecimalTime / 60) * 100 + (DecimalTime % 60);
+}
+
 
 void readCSV(const std::string& filename,  std::vector<TickData>& data) {
     std::ifstream file(filename.c_str());
@@ -71,11 +81,15 @@ void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string
     std::map<std::string, KLineData> currentKLine;
     for (const auto& tick : data) {
         int intervalStartTime = (tick.nTime / (100000)) / (interval) * (interval);
+        if (intervalStartTime < 930 || intervalStartTime > 1500) {
+            continue;
+        }
+        int intervalMinuteTime = sixtyToDecimal(intervalStartTime);
         if (currentKLine.find(tick.szWindCode) == currentKLine.end() || currentKLine[tick.szWindCode].startTime != intervalStartTime) {
             if (currentKLine.find(tick.szWindCode) != currentKLine.end()) {
                 kLines[tick.szWindCode].push_back(currentKLine[tick.szWindCode]);
             }
-            currentKLine[tick.szWindCode] = {tick.nMatch, tick.nMatch, tick.nMatch, tick.nMatch, intervalStartTime};
+            currentKLine[tick.szWindCode] = {tick.nMatch, tick.nMatch, tick.nMatch, tick.nMatch, intervalStartTime, intervalMinuteTime};
         } else {
             currentKLine[tick.szWindCode].high = std::max(currentKLine[tick.szWindCode].high, tick.nMatch);
             currentKLine[tick.szWindCode].low = std::min(currentKLine[tick.szWindCode].low, tick.nMatch);
@@ -90,12 +104,14 @@ void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string
 
 void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& data, std::map<std::string, std::vector<KLineData>>& kLines, int interval) {
     for (const auto& pair : data) {
-        KLineData currentKLine;
+        // 第一个元素初始化当前K线；
+        KLineData currentKLine(pair.second[0]);
         for (const auto& tick : pair.second) {
-            int intervalStartTime = (tick.startTime / interval * interval);
-            if (currentKLine.startTime != intervalStartTime) {
+            int intervalMinuteTime = (tick.minuteTime / interval * interval);
+            int intervalStartTime = DecimalTosixty(intervalMinuteTime);
+            if (currentKLine.minuteTime != intervalMinuteTime) {
                 kLines[pair.first].push_back(currentKLine);
-                currentKLine = {tick.open, tick.high, tick.low, tick.close, intervalStartTime};
+                currentKLine = {tick.open, tick.high, tick.low, tick.close, intervalStartTime, intervalMinuteTime};
             } else {
                 currentKLine.high = std::max(currentKLine.high, tick.high);
                 currentKLine.low = std::min(currentKLine.low, tick.low);
@@ -105,7 +121,6 @@ void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& d
         kLines[pair.first].push_back(currentKLine);
     }
 }
-
 
 
 void writeCSV(const std::string& filename, const std::map<std::string, std::vector<KLineData>>& kLines) {
@@ -124,18 +139,15 @@ void writeCSV(const std::string& filename, const std::map<std::string, std::vect
 }
 
 int main() {
+    std::string fileName = "md_20221110.csv";
     std::vector<TickData> tickData;
-    readCSV("input.csv", tickData);
-    std::map<std::string, std::vector<KLineData>> kLines1min, kLines5min, kLines10min, kLines30min;
-    std::vector<int> KlineNum({5, 10, 30});
-    for (const auto& tick : tickData) {
-        std::cout << "szWindCode: " << tick.szWindCode << ", "
-                  << "nTradingDay: " << tick.nTradingDay << ", "
-                  << "nTime: " << tick.nTime << ", "
-                  << "nMatch: " << tick.nMatch << std::endl;
-    }
+    readCSV(fileName, tickData);
+    // kline 1
+    std::map<std::string, std::vector<KLineData>> kLines1min;
     generateKLineByTick(tickData, kLines1min, 1);
     writeCSV("kline_1min.csv", kLines1min);
+    // kline 5, 10, 30
+    std::vector<int> KlineNum({5, 10, 30});
     for (const auto& num : KlineNum) {
         std::map<std::string, std::vector<KLineData>> kLinesNmin;
         generateKLineByKline(kLines1min, kLinesNmin, num);
