@@ -5,6 +5,11 @@
 #include <string>
 #include <unordered_map>
 #include <chrono>
+#include <mutex>
+#include <thread>
+
+
+std::mutex mtx; // Mutex to protect shared data
 
 
 struct TickData {
@@ -33,20 +38,9 @@ int DecimalTosixty(int DecimalTime) {
 }
 
 
-void readCSV(const std::string& filename,  std::vector<TickData>& data) {
-    std::ifstream file(filename.c_str());
-    std::string line;
-
-    if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-    }
-
-    // Read the header line
-    if (std::getline(file, line)) {
-        // Skip the header line
-    }
-    // Read the data lines
-    while (std::getline(file, line)) {
+void processChunk(const std::vector<std::string>& chunk, std::vector<TickData>& data) {
+    std::vector<TickData> localData;
+    for (const auto& line : chunk) {
         std::istringstream ss(line);
         std::string token;
         TickData tickData;
@@ -68,10 +62,95 @@ void readCSV(const std::string& filename,  std::vector<TickData>& data) {
                 tickData.szWindCode = token;
             }
         }
-        data.push_back(tickData);
+        localData.push_back(tickData);
+    }
+
+    std::lock_guard<std::mutex> lock(mtx);
+    data.insert(data.end(), localData.begin(), localData.end());
+}
+
+void readCSV(const std::string& filename, std::vector<TickData>& data) {
+    std::ifstream file(filename.c_str());
+    std::string line;
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    // Read the header line
+    if (std::getline(file, line)) {
+        // Skip the header line
+    }
+
+    std::vector<std::string> lines;
+    while (std::getline(file, line)) {
+        lines.push_back(line);
     }
     file.close();
+
+    // Split lines into chunks
+    const size_t numThreads = std::thread::hardware_concurrency();
+    const size_t chunkSize = lines.size() / numThreads;
+    std::vector<std::vector<std::string>> chunks(numThreads);
+
+    for (size_t i = 0; i < numThreads; ++i) {
+        size_t start = i * chunkSize;
+        size_t end = (i == numThreads - 1) ? lines.size() : (i + 1) * chunkSize;
+        chunks[i] = std::vector<std::string>(lines.begin() + start, lines.begin() + end);
+    }
+
+    // Process each chunk in a separate thread
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < numThreads; ++i) {
+        threads.emplace_back(processChunk, std::ref(chunks[i]), std::ref(data));
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
 }
+
+
+// void readCSV(const std::string& filename,  std::vector<TickData>& data) {
+//     std::ifstream file(filename.c_str());
+//     std::string line;
+
+//     if (!file.is_open()) {
+//         std::cerr << "Failed to open file: " << filename << std::endl;
+//     }
+
+//     // Read the header line
+//     if (std::getline(file, line)) {
+//         // Skip the header line
+//     }
+//     // Read the data lines
+//     while (std::getline(file, line)) {
+//         std::istringstream ss(line);
+//         std::string token;
+//         TickData tickData;
+//         for (int i = 0; i < 75; ++i) {
+//             if (!std::getline(ss, token, ',')) {
+//                 std::cerr << "Error parsing line: " << line << std::endl;
+//                 break;
+//             }
+//             if (i == 54) {
+//                 tickData.nMatch = std::stod(token);
+//             }
+//             else if (i == 62) {
+//                 tickData.nTime = std::stoi(token);
+//             }
+//             else if (i == 66) {
+//                 tickData.nTradingDay = std::stoi(token);
+//             }
+//             else if (i == 72) {
+//                 tickData.szWindCode = token;
+//             }
+//         }
+//         data.push_back(tickData);
+//     }
+//     file.close();
+// }
 
 
 

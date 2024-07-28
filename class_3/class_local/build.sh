@@ -1,1 +1,1 @@
-g++ -o generate_kline generate_kline.cpp -std=c++11
+g++ -o generate_kline generate_kline_v1.cpp -std=c++14
