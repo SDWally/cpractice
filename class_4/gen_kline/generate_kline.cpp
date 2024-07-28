@@ -2,9 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <map>
 #include <string>
-// #include <iomanip>
+#include <unordered_map>
+#include <chrono>
 
 
 struct TickData {
@@ -45,14 +45,11 @@ void readCSV(const std::string& filename,  std::vector<TickData>& data) {
     if (std::getline(file, line)) {
         // Skip the header line
     }
-
     // Read the data lines
     while (std::getline(file, line)) {
         std::istringstream ss(line);
         std::string token;
         TickData tickData;
-
-        // Skip the first 35 columns
         for (int i = 0; i < 75; ++i) {
             if (!std::getline(ss, token, ',')) {
                 std::cerr << "Error parsing line: " << line << std::endl;
@@ -77,8 +74,8 @@ void readCSV(const std::string& filename,  std::vector<TickData>& data) {
 }
 
 
-void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string, std::vector<KLineData>>& kLines, int interval) {
-    std::map<std::string, KLineData> currentKLine;
+void generateKLineByTick(const std::vector<TickData>& data, std::unordered_map<std::string, std::vector<KLineData>>& kLines, int interval) {
+    std::unordered_map<std::string, KLineData> currentKLine;
     for (const auto& tick : data) {
         int intervalStartTime = (tick.nTime / (100000)) / (interval) * (interval);
         if (intervalStartTime < 930 || intervalStartTime > 1500) {
@@ -102,7 +99,7 @@ void generateKLineByTick(const std::vector<TickData>& data, std::map<std::string
 }
 
 
-void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& data, std::map<std::string, std::vector<KLineData>>& kLines, int interval) {
+void generateKLineByKline(const std::unordered_map<std::string, std::vector<KLineData>>& data, std::unordered_map<std::string, std::vector<KLineData>>& kLines, int interval) {
     for (const auto& pair : data) {
         // 第一个元素初始化当前K线；
         KLineData currentKLine(pair.second[0]);
@@ -123,7 +120,7 @@ void generateKLineByKline(const std::map<std::string, std::vector<KLineData>>& d
 }
 
 
-void writeCSV(const std::string& filename, const std::map<std::string, std::vector<KLineData>>& kLines) {
+void writeCSV(const std::string& filename, std::unordered_map<std::string, std::vector<KLineData>>& kLines) {
     std::ofstream file(filename);
     file << "szWindCode,startTime,open,high,low,close\n";
     for (const auto& pair : kLines) {
@@ -138,20 +135,50 @@ void writeCSV(const std::string& filename, const std::map<std::string, std::vect
     }
 }
 
-int main() {
-    std::string fileName = "md_20221110.csv";
+
+void generateKline(const std::string& filename) {
     std::vector<TickData> tickData;
-    readCSV(fileName, tickData);
+
+    // 开始计时
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::cout << "start read csv " << filename << std::endl;
+    readCSV(filename, tickData);
+
+    // 结束计时
+    auto endReadCsv = std::chrono::high_resolution_clock::now();
+    // 计算执行时间
+    std::chrono::duration<double> elapsedReadCsv = endReadCsv - start;
+    std::cout << "Read csv time: " << elapsedReadCsv.count() << " seconds" << std::endl;
+
     // kline 1
-    std::map<std::string, std::vector<KLineData>> kLines1min;
+    std::cout << "generating kline 1min" << std::endl;
+    std::unordered_map<std::string, std::vector<KLineData>> kLines1min;
     generateKLineByTick(tickData, kLines1min, 1);
     writeCSV("kline_1min.csv", kLines1min);
     // kline 5, 10, 30
     std::vector<int> KlineNum({5, 10, 30});
     for (const auto& num : KlineNum) {
-        std::map<std::string, std::vector<KLineData>> kLinesNmin;
+        std::cout << "generating kline " << std::to_string(num) << "min" << std::endl;
+        std::unordered_map<std::string, std::vector<KLineData>> kLinesNmin;
         generateKLineByKline(kLines1min, kLinesNmin, num);
         writeCSV("kline_" + std::to_string(num) + "min.csv", kLinesNmin);
     }
+    std::cout << "success." << std::endl;
+
+    // 结束计时
+    auto end = std::chrono::high_resolution_clock::now();
+    // 计算执行时间
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "Elapsed time: " << elapsed.count() << " seconds" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+        return 1;
+    }
+    std::string filename = argv[1];
+    generateKline(filename);
     return 0;
 }

@@ -39,6 +39,14 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp",
-        "error.h": "c"
+        "error.h": "c",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "list": "cpp",
+        "functional": "cpp",
+        "ratio": "cpp",
+        "mutex": "cpp",
+        "numeric": "cpp",
+        "thread": "cpp"
     }
 }
