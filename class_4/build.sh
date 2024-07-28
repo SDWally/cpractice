@@ -1,0 +1,1 @@
+g++ -o cal_minbar cal_minbar.cxx -std=c++11
